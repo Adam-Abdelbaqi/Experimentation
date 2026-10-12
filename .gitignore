@@ -1,0 +1,19 @@
+# Keep raw & processed dataset out
+data/
+*.csv
+
+# Python environment & cache
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Jupyter Notebook artifacts
+.ipynb_checkpoints/
+
+# IDE & OS settings
+.vscode/
+.idea/
+.DS_Store
