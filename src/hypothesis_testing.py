@@ -3,8 +3,6 @@ import numpy as np
 from scipy import stats
 from statsmodels.stats.proportion import proportions_ztest
 from statsmodels.stats.multitest import multipletests
-from src.data import load_data
-from src.srm_check import run_srm_check
 
 
 def test_primary_metric(df: pd.DataFrame , alpha = 0.05):
@@ -121,7 +119,7 @@ def test_secondary_metric(df: pd.DataFrame , alpha = 0.05):
     print(f"Control AOV: ${mean_C:.2f}")
     print(f"Relative Lift: {relative_lift:+.2f}%")
     print(f"{(1-alpha)*100:.0f}% CI for Lift: [{ci_lower_rel:+.2f}%, {ci_upper_rel:+.2f}%]")
-    print(f"t-Statistic: {t_stat:.4f} | p-value: {p_value:.4e}")
+    print(f"t-Statistic: {t_stat:.4f} | p-value: {p_value}")
 
     # Decision Rule
     if p_value < alpha:
@@ -135,17 +133,3 @@ def test_secondary_metric(df: pd.DataFrame , alpha = 0.05):
         "ci_rel": (ci_lower_rel, ci_upper_rel),
     }
 
-from src.data import load_data
-from src.srm_check import run_srm_check
-
-# Load clean data
-df = load_data(r"C:\Users\Dell\Desktop\Adam\Experiments\Etsy-checkout-abtest\data\processed\Redesign_checkout.csv")
-
-# 1. Diagnostic: Check for allocation bias
-run_srm_check(df)
-
-# 2. Primary Metric: Binary Conversion Rate Z-Test
-test_primary_metric(df)
-
-# 3. Secondary Metric: Continuous AOV Welch's t-test
-test_secondary_metric(df)

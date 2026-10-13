@@ -40,5 +40,3 @@ def run_srm_check(df: pd.DataFrame , expected_ratio = (0.5 , 0.5) , alpha = 0.05
     return p_value
 
 
-mydf = load_data(r"C:\Users\Dell\Desktop\Adam\Experiments\Etsy-checkout-abtest\data\processed\Redesign_checkout.csv")
-results = run_srm_check(mydf)
