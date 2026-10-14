@@ -8,7 +8,20 @@ def run_srm_check(df: pd.DataFrame , expected_ratio = (0.5 , 0.5) , alpha = 0.05
     """
     # Ensuring that the dataset is a dataframe
     if not isinstance(df , pd.DataFrame):
-        raise TypeError("The Dataset must be a DataFrame")
+        raise TypeError("The Dataset must be a DataFrame.")
+
+    #Ensuring that the Significance level (alpha) is between 0 and 1
+    if not 0 < alpha < 1:
+        raise ValueError("alpha must be between 0 and 1.")
+
+    # Validating that the Dataset is not Empty
+    if df.empty:
+        raise ValueError("Cannot Run SRM Test on Empty Dataset.")
+
+    if "variant" not in df.columns:
+        raise ValueError("Missing 'variant' Column.")
+
+
 
     observed = df['variant'].value_counts().sort_index()
     total_users = observed.sum()

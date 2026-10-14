@@ -13,20 +13,35 @@ def test_primary_metric(df: pd.DataFrame , alpha = 0.05):
     if not isinstance(df , pd.DataFrame):
         raise TypeError("The Dataset Must be Pandas DataFrame")
 
+    if not 0 < alpha < 1:
+        raise ValueError("alpha must be between 0 and 1.")
+
+    if df[["variant", "converted"]].isna().any().any():
+        raise ValueError("Missing values in metric columns.")
+
+
+    if not df["converted"].isin([0, 1]).all():
+        raise ValueError("converted must contain only 0 and 1.")
+
+
+
     summary = df.groupby("variant").agg(
         total_conversions = ('converted' , 'sum'),
         total_users = ('converted' , 'count'),
         conversion_rate = ('converted' , 'mean')
-    ).reset_index()
+    )
+
+    if not {"control", "treatment"}.issubset(summary.index):
+        raise ValueError("Both experiment groups must be present.")
 
     # Extract Control & Treatment stats
-    treatment = summary[summary['variant'] == 'treatment'].iloc[0]
-    control = summary[summary['variant'] == 'control'].iloc[0]
+    treatment = summary.loc['treatment']
+    control = summary.loc['control']
 
-    p_T = treatment["conversion_rate"]
-    p_C = control["conversion_rate"]
-    n_T = treatment["total_users"]
-    n_C = control['total_users']
+    p_C = float(control["conversion_rate"])
+    p_T = float(treatment["conversion_rate"])
+    n_C = int(control["total_users"])
+    n_T = int(treatment["total_users"])
 
     # Performing the TWo-Proportion Z-test
     count = [treatment["total_conversions"] , control["total_conversions"]]
@@ -76,6 +91,13 @@ def test_secondary_metric(df: pd.DataFrame , alpha = 0.05):
     if not isinstance(df , pd.DataFrame):
         raise TypeError("The Dataset Must be a Pandas DataFrame")
 
+    if not 0 < alpha < 1:
+        raise ValueError("alpha must be between 0 and 1.")
+
+    if df[["variant", "converted" , "user_revenue" , "order_count"]].isna().any().any():
+            raise ValueError("Missing values in metric columns.")
+
+
     # Filter for converted users only (AOV applies only to purchases)
     converting_df = df[df["converted"] == 1].copy()
     converting_df["user_aov"] = (converting_df["user_revenue"] / converting_df["order_count"])
@@ -98,6 +120,8 @@ def test_secondary_metric(df: pd.DataFrame , alpha = 0.05):
     # Test Selection: Welch's t-test (two-sided)
     # Reason: Continuous monetary metric with unequal group variances (equal_var=False)
 
+
+
     # Perfoming Welch t-test
     t_stat , p_value = stats.ttest_ind(a= treatment_aov ,b= control_aov , equal_var= False)
     # Absolute Relative Lift and Confidence Interval
@@ -105,8 +129,8 @@ def test_secondary_metric(df: pd.DataFrame , alpha = 0.05):
     
     relative_lift = (abs_lift / mean_C) * 100
     se_diff = np.sqrt((treatment_aov.var(ddof=1) / n_T) + (control_aov.var(ddof=1) / n_C))
-    z_crit = stats.norm.ppf(1 - (alpha / 2))
-    margin_of_error = se_diff * z_crit
+    t_crit = stats.t.ppf(1 - (alpha / 2))
+    margin_of_error = se_diff * t_crit
 
     # Computing the Confidence Interval
     ci_lower_rel = ((abs_lift - margin_of_error) / mean_C) * 100
